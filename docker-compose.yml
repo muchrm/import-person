@@ -1,0 +1,24 @@
+version: "3"
+services:
+  mariadb:
+    container_name: mariadb
+    image: mariadb:bionic
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backup:/backup
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    restart: always
+    ports:
+      - 8080:80
+    links:
+      - mariadb:db
+    environment:
+      PMA_USER: root
+      PMA_PASSWORD: root
+volumes:
+    mysql_data:
