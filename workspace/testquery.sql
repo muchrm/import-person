@@ -1,7 +1,7 @@
-SET SESSION group_concat_max_len = 1000000;
+-- SET SESSION group_concat_max_len = 1000000;
 
 SELECT
-			`Person`.`personId`,
+		    `Person`.`personId`,
             `Person`.`personCode`,
             `Person`.`fName`,
             `Person`.`lName`,
@@ -27,7 +27,16 @@ SELECT
             'educmajorName',`Educmajor`.`educmajorName`,
             'educplaceName',`Educplace`.`educplaceName`,
             'countryName',`Country`.`countryName`
-            )),']') AS `history_education`
+            )),']') AS `history_education`,
+            CONCAT(
+            '[',
+            GROUP_CONCAT(
+            JSON_OBJECT(
+            'start_date',`moresearcher`.`rs_experience`.`ex_start_date`,
+            'end_date',`moresearcher`.`rs_experience`.`ex_end_date`,
+            'position',`moresearcher`.`rs_experience`.`ex_position`,
+            'workplace',`moresearcher`.`rs_experience`.`ex_workplace`
+            )),']') AS `history_work`
 FROM `Person`
 LEFT JOIN `PersonT` ON `PersonT`.`personId` = `Person`.`personId`
 LEFT JOIN `rs_academic` ON `rs_academic`.`ac_ps_id` = `Person`.`personId`
@@ -38,5 +47,6 @@ LEFT JOIN `Degree` ON `Education`.`degreeId` = `Degree`.`degreeId`
 LEFT JOIN `Educmajor` ON `Education`.`educmajorId` = `Educmajor`.`educmajorId`
 LEFT JOIN `Educplace` ON `Education`.`educplaceId` = `Educplace`.`educplaceId`
 LEFT JOIN `Country` ON `Education`.`countryId` = `Country`.`countryId`
+LEFT JOIN `moresearcher`.`rs_user` ON `moresearcher`.`rs_user`.`us_ps_id` = `Person`.`personId`
+LEFT JOIN `moresearcher`.`rs_experience` ON `moresearcher`.`rs_experience`.`ex_us_id` = `moresearcher`.`rs_user`.`us_id`
 GROUP BY `Person`.`personId`
-LIMIT 20
