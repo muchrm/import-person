@@ -1,17 +1,22 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/muchrm/import-person/personmongo"
 	"github.com/muchrm/import-person/personsql"
 )
 
 func main() {
-	result, err := personsql.GetPersonInfo()
+	persons, err := personsql.GetPersonInfo()
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(result)
+	for _, person := range persons {
+		err = personmongo.AddPerson(person)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
 }

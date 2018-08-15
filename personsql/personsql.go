@@ -2,25 +2,15 @@ package personsql
 
 import (
 	"database/sql"
+	"encoding/json"
+	"errors"
+	"fmt"
 	"io/ioutil"
 	"strconv"
+	"time"
 
 	"github.com/muchrm/import-person/person"
 )
-
-type PersonSQL struct {
-	personCode       string
-	fName            string
-	lName            string
-	fName2           string
-	lName2           string
-	birthDate        string
-	prefixName       sql.NullString
-	email            string
-	PersonStatus     string
-	historyEducation sql.NullString
-	historyWork      sql.NullString
-}
 
 func getConnection() (*sql.DB, error) {
 	db, err := sql.Open("mysql",
@@ -68,7 +58,7 @@ func GetPersonInfo() ([]person.Person, error) {
 			&personSQL.fName2,
 			&personSQL.lName2,
 			&personSQL.birthDate,
-			&personSQL.prefixName,
+			&personSQL.position,
 			&personSQL.email,
 			&personSQL.PersonStatus,
 			&personSQL.historyEducation,
@@ -97,11 +87,71 @@ func parsePerson(personSQL PersonSQL) (person.Person, error) {
 	teacher.OfficerSurname = personSQL.lName
 	teacher.OfficerNameEng = personSQL.fName2
 	teacher.OfficerSurnameEng = personSQL.lName2
-	if personSQL.prefixName.Valid {
-		teacher.OfficerPrefixName = personSQL.prefixName.String
+	if personSQL.position.Valid {
+		teacher.OfficerPosition = personSQL.position.String
 	}
 	teacher.Email = personSQL.email
 	teacher.OfficerStatus = personSQL.PersonStatus
 
+	teacher.HistoryEducations, err = parseHistoryEducations(personSQL)
+	if err != nil {
+		return person.Person{}, err
+	}
+	teacher.HistoryWorks, err = parseHistoryWork(personSQL)
+	if err != nil {
+		return person.Person{}, err
+	}
 	return teacher, nil
+}
+func parseHistoryEducations(personSQL PersonSQL) ([]person.HistoryEducation, error) {
+	if !personSQL.historyEducation.Valid {
+	}
+	var historyEducationSQLs []HistoryEducationSQL
+	historyEducations := []person.HistoryEducation{}
+	err := json.Unmarshal([]byte(personSQL.historyEducation.String), &historyEducationSQLs)
+	if err != nil {
+		return []person.HistoryEducation{}, err
+	}
+	for _, historyEducationSQL := range historyEducationSQLs {
+		historyEducation := person.HistoryEducation{}
+		historyEducation.LevelName = historyEducationSQL.LevelName
+		historyEducation.DegreeName = historyEducationSQL.DegreeName
+		historyEducation.CountryName = historyEducationSQL.CountryName
+		historyEducation.MajorName = historyEducationSQL.MajorName
+		historyEducation.PlaceName = historyEducationSQL.PlaceName
+		endYear, err := strconv.Atoi(historyEducationSQL.EndYear)
+		if err != nil {
+			return []person.HistoryEducation{}, err
+		}
+		historyEducation.EndYear = endYear
+		historyEducations = append(historyEducations, historyEducation)
+	}
+	return historyEducations, nil
+}
+func parseHistoryWork(personSQL PersonSQL) ([]person.HistoryWork, error) {
+	if !personSQL.historyWork.Valid {
+		return []person.HistoryWork{}, errors.New("history work invalid")
+	}
+	historyWorks := []person.HistoryWork{}
+	var historyWorkSQLs []HistoryWorkSQL
+	err := json.Unmarshal([]byte(personSQL.historyWork.String), &historyWorkSQLs)
+	if err != nil {
+		return []person.HistoryWork{}, err
+	}
+	for _, historyWorkSQL := range historyWorkSQLs {
+		historyWork := person.HistoryWork{}
+		historyWork.Position = historyWorkSQL.Position
+		historyWork.Workplace = historyWorkSQL.Workplace
+		historyWorks = append(historyWorks, historyWork)
+		if startDate, err := converDate(historyWorkSQL.StartDate); err == nil {
+			historyWork.StartDate = startDate
+		}
+		if endDate, err := converDate(historyWorkSQL.EndDate); err == nil {
+			historyWork.EndDate = endDate
+		}
+	}
+	return historyWorks, nil
+}
+func converDate(s string) (time.Time, error) {
+	return time.Parse(time.RFC3339, fmt.Sprintf("%sT00:00:00Z", s))
 }

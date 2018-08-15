@@ -6,9 +6,11 @@ import (
 
 type HistoryEducation struct {
 	LevelName   string
+	DegreeName  string
 	MajorName   string
 	PlaceName   string
 	CountryName string
+	EndYear     int
 }
 type HistoryWork struct {
 	StartDate time.Time
@@ -17,17 +19,18 @@ type HistoryWork struct {
 	Workplace string
 }
 type Person struct {
-	OfficerCode       int
-	OfficerPrefixName string
+	OfficerCode int
+
 	OfficerName       string
 	OfficerSurname    string
 	OfficerNameEng    string
 	OfficerSurnameEng string
 	OfficerPosition   string
+	OfficerType       string
 	OfficerLogin      string
 	OfficerStatus     string
 	Email             string
 	MajorName         string
 	HistoryWorks      []HistoryWork
-	HistoryEducation  []HistoryEducation
+	HistoryEducations []HistoryEducation
 }
