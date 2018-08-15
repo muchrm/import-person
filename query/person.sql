@@ -8,7 +8,7 @@ SELECT
 			PersonT.fName2,
 			PersonT.lName2,
 			PersonT.birthDate,
-			rs_academic_position.acp_name_th,
+			rs_academic_position.acp_name_th as prefixName,
 			PersonT.emailAddr AS email,
 			(
 				CASE Person.fStatus
@@ -17,8 +17,8 @@ SELECT
 				ELSE null
 				END
 			) AS PersonStatus,
-			history_education.history_education,
-            history_work.history_work
+			history_education.history_education as historyEducation,
+            history_work.history_work as historyWork
 		FROM Person
 		LEFT JOIN PersonT ON PersonT.personId = Person.personId
 		LEFT JOIN rs_academic ON rs_academic.ac_ps_id = Person.personId
