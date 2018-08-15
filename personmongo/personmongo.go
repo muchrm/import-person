@@ -26,7 +26,7 @@ func AddPerson(person person.Person) error {
 	}
 	coll := db.Collection("people")
 	collHistoryEducation := db.Collection("historyeducations")
-	// collHistoryWork := db.Collection("historyworks")
+	collHistoryWork := db.Collection("historyworks")
 	result, err := coll.InsertOne(
 		context.Background(),
 		bson.NewDocument(
@@ -53,6 +53,18 @@ func AddPerson(person person.Person) error {
 				bson.EC.String("place", historyeducation.PlaceName),
 				bson.EC.String("country", historyeducation.CountryName),
 				bson.EC.Int32("graduatedYear", int32(historyeducation.EndYear)),
+				bson.EC.ObjectID("personId", result.InsertedID.(objectid.ObjectID)),
+			))
+	}
+	for _, historyWork := range person.HistoryWorks {
+		collHistoryWork.InsertOne(
+			context.Background(),
+			bson.NewDocument(
+				bson.EC.DateTime("dateStart", historyWork.StartDate.UnixNano()/1e6),
+				bson.EC.DateTime("dateEnd", historyWork.EndDate.UnixNano()/1e6),
+				bson.EC.String("position", historyWork.Position),
+				bson.EC.String("place", historyWork.Workplace),
+				bson.EC.Boolean("dateless", historyWork.DateLess),
 				bson.EC.ObjectID("personId", result.InsertedID.(objectid.ObjectID)),
 			))
 	}

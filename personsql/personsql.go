@@ -3,10 +3,10 @@ package personsql
 import (
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/muchrm/import-person/person"
@@ -68,7 +68,9 @@ func GetPersonInfo() ([]person.Person, error) {
 			return nil, err
 		}
 		teacher, err := parsePerson(personSQL)
-		persons = append(persons, teacher)
+		if err == nil {
+			persons = append(persons, teacher)
+		}
 	}
 	err = rows.Err()
 	if err != nil {
@@ -91,6 +93,10 @@ func parsePerson(personSQL PersonSQL) (person.Person, error) {
 		teacher.OfficerPosition = personSQL.position.String
 	}
 	teacher.Email = personSQL.email
+	splitedEmail := strings.Split(teacher.Email, "@")
+	if len(splitedEmail) > 0 {
+		teacher.OfficerLogin = splitedEmail[0]
+	}
 	teacher.OfficerStatus = personSQL.PersonStatus
 
 	teacher.HistoryEducations, err = parseHistoryEducations(personSQL)
@@ -105,6 +111,7 @@ func parsePerson(personSQL PersonSQL) (person.Person, error) {
 }
 func parseHistoryEducations(personSQL PersonSQL) ([]person.HistoryEducation, error) {
 	if !personSQL.historyEducation.Valid {
+		return []person.HistoryEducation{}, nil
 	}
 	var historyEducationSQLs []HistoryEducationSQL
 	historyEducations := []person.HistoryEducation{}
@@ -120,17 +127,16 @@ func parseHistoryEducations(personSQL PersonSQL) ([]person.HistoryEducation, err
 		historyEducation.MajorName = historyEducationSQL.MajorName
 		historyEducation.PlaceName = historyEducationSQL.PlaceName
 		endYear, err := strconv.Atoi(historyEducationSQL.EndYear)
-		if err != nil {
-			return []person.HistoryEducation{}, err
+		if err == nil {
+			historyEducation.EndYear = endYear
 		}
-		historyEducation.EndYear = endYear
 		historyEducations = append(historyEducations, historyEducation)
 	}
 	return historyEducations, nil
 }
 func parseHistoryWork(personSQL PersonSQL) ([]person.HistoryWork, error) {
 	if !personSQL.historyWork.Valid {
-		return []person.HistoryWork{}, errors.New("history work invalid")
+		return []person.HistoryWork{}, nil
 	}
 	historyWorks := []person.HistoryWork{}
 	var historyWorkSQLs []HistoryWorkSQL
@@ -138,17 +144,23 @@ func parseHistoryWork(personSQL PersonSQL) ([]person.HistoryWork, error) {
 	if err != nil {
 		return []person.HistoryWork{}, err
 	}
+
 	for _, historyWorkSQL := range historyWorkSQLs {
 		historyWork := person.HistoryWork{}
 		historyWork.Position = historyWorkSQL.Position
 		historyWork.Workplace = historyWorkSQL.Workplace
-		historyWorks = append(historyWorks, historyWork)
 		if startDate, err := converDate(historyWorkSQL.StartDate); err == nil {
 			historyWork.StartDate = startDate
 		}
 		if endDate, err := converDate(historyWorkSQL.EndDate); err == nil {
 			historyWork.EndDate = endDate
 		}
+		if historyWorkSQL.EndDate == "0000-00-00" {
+			historyWork.DateLess = true
+		} else {
+			historyWork.DateLess = false
+		}
+		historyWorks = append(historyWorks, historyWork)
 	}
 	return historyWorks, nil
 }

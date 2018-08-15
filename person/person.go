@@ -15,6 +15,7 @@ type HistoryEducation struct {
 type HistoryWork struct {
 	StartDate time.Time
 	EndDate   time.Time
+	DateLess  bool
 	Position  string
 	Workplace string
 }
