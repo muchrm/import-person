@@ -31,15 +31,15 @@ func AddPerson(person person.Person) error {
 		context.Background(),
 		bson.NewDocument(
 			bson.EC.Int32("officerCode", int32(person.OfficerCode)),
-			bson.EC.String("OfficerName", person.OfficerName),
-			bson.EC.String("OfficerSurname", person.OfficerSurname),
-			bson.EC.String("OfficerNameEng", person.OfficerNameEng),
-			bson.EC.String("OfficerSurnameEng", person.OfficerSurnameEng),
+			bson.EC.String("officerName", person.OfficerName),
+			bson.EC.String("officerSurname", person.OfficerSurname),
+			bson.EC.String("officerNameEng", person.OfficerNameEng),
+			bson.EC.String("officerSurnameEng", person.OfficerSurnameEng),
 			bson.EC.String("officerPosition", person.OfficerPosition),
-			bson.EC.String("OfficerType", person.OfficerType),
-			bson.EC.String("OfficerLogin", person.OfficerLogin),
-			bson.EC.String("OfficerStatus", person.OfficerStatus),
-			bson.EC.String("Email", person.Email),
+			bson.EC.String("officerType", person.OfficerType),
+			bson.EC.String("officerLogin", person.OfficerLogin),
+			bson.EC.String("officerStatus", person.OfficerStatus),
+			bson.EC.String("officerEmail", person.Email),
 		))
 	if err != nil {
 		return err

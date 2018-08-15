@@ -1,8 +1,8 @@
 package config
 
 func GetMongoHost() string {
-	return "mongodb://root:root@localhost:27017"
+	return "mongodb://10.18.0.11:27018"
 }
 func GetMongoDB() string {
-	return "mis_person"
+	return "mis_persons"
 }
