@@ -1,7 +1,6 @@
 -- SET SESSION group_concat_max_len = 1000000;
 
 SELECT
-			Person.personId,
 			Person.personCode,
 			Person.fName,
 			Person.lName,

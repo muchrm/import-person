@@ -17,12 +17,17 @@ type HistoryWork struct {
 	Workplace string
 }
 type Person struct {
-	OfficerCode      int32
-	OfficerName      string
-	OfficerSurname   string
-	OfficerPosition  string
-	OfficerLogin     string
-	MajorName        string
-	HistoryWorks     []HistoryWork
-	HistoryEducation []HistoryEducation
+	OfficerCode       int
+	OfficerPrefixName string
+	OfficerName       string
+	OfficerSurname    string
+	OfficerNameEng    string
+	OfficerSurnameEng string
+	OfficerPosition   string
+	OfficerLogin      string
+	OfficerStatus     string
+	Email             string
+	MajorName         string
+	HistoryWorks      []HistoryWork
+	HistoryEducation  []HistoryEducation
 }

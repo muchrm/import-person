@@ -3,7 +3,7 @@ package personsql
 import (
 	"database/sql"
 	"io/ioutil"
-	"log"
+	"strconv"
 
 	"github.com/muchrm/import-person/person"
 )
@@ -22,7 +22,7 @@ type PersonSQL struct {
 	historyWork      sql.NullString
 }
 
-func GetConnection() (*sql.DB, error) {
+func getConnection() (*sql.DB, error) {
 	db, err := sql.Open("mysql",
 		"root:root@tcp(127.0.0.1:3306)/people")
 	if err != nil {
@@ -31,7 +31,7 @@ func GetConnection() (*sql.DB, error) {
 	return db, nil
 }
 
-func Query(db *sql.DB, path string) (*sql.Rows, error) {
+func query(db *sql.DB, path string) (*sql.Rows, error) {
 	bufQuery, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -48,21 +48,20 @@ func GetPersonInfo() ([]person.Person, error) {
 	var err error
 	persons := []person.Person{}
 
-	db, err := GetConnection()
+	db, err := getConnection()
 	defer db.Close()
 	if err != nil {
 		return nil, err
 	}
 
-	rows, err := Query(db, "./query/person.sql")
+	rows, err := query(db, "./query/person.sql")
+	defer rows.Close()
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
 
 	for rows.Next() {
 		err := rows.Scan(
-			&personSQL.personCode,
 			&personSQL.personCode,
 			&personSQL.fName,
 			&personSQL.lName,
@@ -78,11 +77,31 @@ func GetPersonInfo() ([]person.Person, error) {
 		if err != nil {
 			return nil, err
 		}
-		log.Println(personSQL)
+		teacher, err := parsePerson(personSQL)
+		persons = append(persons, teacher)
 	}
 	err = rows.Err()
 	if err != nil {
 		return nil, err
 	}
 	return persons, err
+}
+func parsePerson(personSQL PersonSQL) (person.Person, error) {
+	teacher := person.Person{}
+	personCode, err := strconv.Atoi(personSQL.personCode)
+	if err != nil {
+		return person.Person{}, err
+	}
+	teacher.OfficerCode = personCode
+	teacher.OfficerName = personSQL.fName
+	teacher.OfficerSurname = personSQL.lName
+	teacher.OfficerNameEng = personSQL.fName2
+	teacher.OfficerSurnameEng = personSQL.lName2
+	if personSQL.prefixName.Valid {
+		teacher.OfficerPrefixName = personSQL.prefixName.String
+	}
+	teacher.Email = personSQL.email
+	teacher.OfficerStatus = personSQL.PersonStatus
+
+	return teacher, nil
 }
