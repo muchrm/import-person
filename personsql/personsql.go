@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -21,6 +22,15 @@ func getConnection() (*sql.DB, error) {
 	return db, nil
 }
 
+func getJSON(url string, target interface{}) error {
+	r, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer r.Body.Close()
+
+	return json.NewDecoder(r.Body).Decode(target)
+}
 func query(db *sql.DB, path string) (*sql.Rows, error) {
 	bufQuery, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -50,6 +60,11 @@ func GetPersonInfo() ([]person.Person, error) {
 		return nil, err
 	}
 
+	TeacherJSONs := []TeacherJSON{}
+	err = getJSON("http://10.18.0.8:8000/api/reg/teachers", &Response{Data: &TeacherJSONs})
+	if err != nil {
+		return nil, err
+	}
 	for rows.Next() {
 		err := rows.Scan(
 			&personSQL.personCode,
@@ -69,6 +84,11 @@ func GetPersonInfo() ([]person.Person, error) {
 		}
 		teacher, err := parsePerson(personSQL)
 		if err == nil {
+			for _, teacherJSON := range TeacherJSONs {
+				if teacher.OfficerCode == teacherJSON.OfficerCode {
+					teacher.OfficerType = teacherJSON.OfficerType
+				}
+			}
 			persons = append(persons, teacher)
 		}
 	}

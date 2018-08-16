@@ -30,3 +30,10 @@ type HistoryWorkSQL struct {
 	Position  string `json:"position"`
 	Workplace string `json:"workplace"`
 }
+type TeacherJSON struct {
+	OfficerCode int    `json:"officerCode"`
+	OfficerType string `json:"officerType"`
+}
+type Response struct {
+	Data interface{} `json:"data"`
+}
